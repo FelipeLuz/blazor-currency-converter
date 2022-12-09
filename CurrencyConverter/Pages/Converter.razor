@@ -39,11 +39,10 @@
 		}
 	</select>
 </div>
-
 <div class="form-group">
 	<label for="Base" class="control-label">
 	Amount</label>
-	<input for="Base" class="form-control" type="number" @onchange="OnAmountUpdate" />
+	<input for="Base" class="form-control" type="number" @onchange="OnAmountUpdate"/>
 </div>
 
 @if (rates == null)
@@ -80,7 +79,7 @@ else
 	private List<string> currencies;
 	private Rate[]? rates;
 	private string from;
-    private double amount;
+    private double amount = 1;
 	private bool loading = false;
 
     protected override async Task OnInitializedAsync()
