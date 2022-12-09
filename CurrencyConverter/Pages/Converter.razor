@@ -1,0 +1,118 @@
+﻿@page "/"
+
+<PageTitle>Currency Converter</PageTitle>
+
+@using CurrencyConverter.Data
+@inject ExchangeRateService ExchangeRateService
+
+<style>
+.header{
+	text-align: center;
+}
+
+.form-group {
+  max-width:200px;
+  margin: auto;
+  margin-top: 10px;
+}
+
+.table {
+  max-width:500px;
+  margin: auto;
+  margin-top: 30px;
+  border: 300px ;
+}
+</style>
+
+<h1 class="header">Currency Converter</h1>
+
+<div class="form-group">
+	<label for="Base" class="control-label">
+		Base Currency</label>
+	<select for="Base" class="form-control" @onchange="OnCurrencySelected" >
+		<option value=0 disabled selected hidden>
+				[Select Currency]</option>
+		@foreach (var currency in currencies)
+		{
+			<option value="@currency">
+				@currency</option>
+		}
+	</select>
+</div>
+
+<div class="form-group">
+	<label for="Base" class="control-label">
+	Amount</label>
+	<input for="Base" class="form-control" type="number" @onchange="OnAmountUpdate" />
+</div>
+
+@if (rates == null)
+{
+	@if(loading)
+	{
+    	<p class="header table"><em>Loading...</em></p>
+	}
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Currency</th>
+                <th>Rate</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var currency in rates)
+            {
+                <tr>
+                    <td>@currency.Code</td>
+                    <td>@currency.Symbol @currency.Value</td>
+                    <td>@currency.Symbol @currency.Total</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+	private List<string> currencies;
+	private Rate[]? rates;
+	private string from;
+    private double amount;
+	private bool loading = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+		currencies = ExchangeRateService.Currencies;
+    }
+
+	protected async void OnCurrencySelected(ChangeEventArgs args)
+    {
+		from = args.Value.ToString();
+		UpdateTable();
+    }
+
+	protected async void OnAmountUpdate(ChangeEventArgs args)
+	{
+		amount = Convert.ToDouble(args.Value.ToString());
+		
+		if(rates is null)
+			return;
+		foreach(var rate in rates)
+			rate.Total = Math.Round(rate.Value * amount, 6);
+		
+		StateHasChanged();
+	}
+
+	private async void UpdateTable()
+	{
+		loading = true;
+		rates = null;
+	   	StateHasChanged();
+       	rates = await ExchangeRateService.GetRates(from, amount);
+	   	StateHasChanged();
+		loading = false;
+	}
+}
